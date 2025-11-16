@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../css/Products.css';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import CartIcon from '../../components/CartIcon';
+import '../../css/Products.css';
 
 const API_URL = 'http://localhost:5000/api/products';
 
 function Products() {
   const { currentUser } = useAuth();
+  const { addToCart, getCartItem } = useCart();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,11 +83,14 @@ function Products() {
     <div className="products-container">
       <div className="products-header">
         <h1>Products</h1>
-        {currentUser && (
-          <Link to="/products/new" className="btn-primary">
-            Add New Product
-          </Link>
-        )}
+        <div className="products-header-actions">
+          <CartIcon />
+          {currentUser && (
+            <Link to="/products/new" className="btn-primary">
+              Add New Product
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="products-filters">
@@ -137,6 +143,20 @@ function Products() {
                 <Link to={`/products/${product._id}`} className="btn-view">
                   View Details
                 </Link>
+                {product.stock > 0 && (
+                  <button
+                    onClick={() => {
+                      const wasAdded = addToCart(product, 1);
+                      if (!wasAdded) {
+                        alert('This item is already in your cart. Update quantity in cart.');
+                      }
+                    }}
+                    className="btn-add-cart"
+                    disabled={getCartItem(product._id) !== undefined}
+                  >
+                    {getCartItem(product._id) ? 'In Cart' : 'Add to Cart'}
+                  </button>
+                )}
                 {currentUser && currentUser.id === product.createdBy?._id && (
                   <>
                     <Link to={`/products/${product._id}/edit`} className="btn-edit">

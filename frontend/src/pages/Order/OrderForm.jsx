@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../css/OrderForm.css';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import '../../css/OrderForm.css';
 
 const API_URL = 'http://localhost:5000/api';
 
 function OrderForm() {
   const { currentUser } = useAuth();
+  const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
-  const [cart, setCart] = useState([]);
   const [products, setProducts] = useState([]);
   const [shippingAddress, setShippingAddress] = useState({
     street: '',
@@ -27,19 +28,15 @@ function OrderForm() {
       return;
     }
 
-    // Load cart from localStorage or fetch products
-    const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
-    if (savedCart.length > 0) {
-      setCart(savedCart);
-      fetchProducts(savedCart);
-    } else {
-      fetchAllProducts();
+    // Load cart from CartContext
+    if (cartItems.length > 0) {
+      fetchProducts(cartItems);
     }
-  }, []);
+  }, [cartItems, currentUser, navigate]);
 
-  const fetchProducts = async (cartItems) => {
+  const fetchProducts = async (items) => {
     try {
-      const productIds = cartItems.map(item => item.productId);
+      const productIds = items.map(item => item.productId);
       const productPromises = productIds.map(id =>
         fetch(`${API_URL}/products/${id}`).then(res => res.json())
       );
@@ -62,41 +59,8 @@ function OrderForm() {
     }
   };
 
-  const addToCart = (product) => {
-    const existingItem = cart.find(item => item.productId === product._id);
-    if (existingItem) {
-      setCart(cart.map(item =>
-        item.productId === product._id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
-    } else {
-      setCart([...cart, {
-        productId: product._id,
-        quantity: 1,
-        price: product.price
-      }]);
-    }
-  };
-
-  const updateQuantity = (productId, quantity) => {
-    if (quantity <= 0) {
-      setCart(cart.filter(item => item.productId !== productId));
-    } else {
-      setCart(cart.map(item =>
-        item.productId === productId
-          ? { ...item, quantity: parseInt(quantity) }
-          : item
-      ));
-    }
-  };
-
-  const removeFromCart = (productId) => {
-    setCart(cart.filter(item => item.productId !== productId));
-  };
-
   const calculateTotal = () => {
-    return cart.reduce((total, item) => {
+    return cartItems.reduce((total, item) => {
       const product = products.find(p => p._id === item.productId);
       return total + (product?.price || item.price) * item.quantity;
     }, 0);
@@ -107,7 +71,7 @@ function OrderForm() {
     setError('');
     setLoading(true);
 
-    if (cart.length === 0) {
+    if (cartItems.length === 0) {
       setError('Please add at least one product to the order');
       setLoading(false);
       return;
@@ -122,7 +86,11 @@ function OrderForm() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          items: cart,
+          items: cartItems.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price
+          })),
           shippingAddress,
           paymentMethod
         })
@@ -131,7 +99,7 @@ function OrderForm() {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.removeItem('cart');
+        clearCart();
         navigate(`/orders/${data.order._id}`);
       } else {
         setError(data.message || 'Failed to create order');
@@ -150,39 +118,15 @@ function OrderForm() {
       {error && <div className="error-message">{error}</div>}
 
       <div className="order-form-layout">
-        <div className="products-section">
-          <h2>Available Products</h2>
-          <div className="products-list">
-            {products.map((product) => (
-              <div key={product._id} className="product-item">
-                {product.photos?.[0] && (
-                  <img src={product.photos[0]} alt={product.name} />
-                )}
-                <div className="product-info">
-                  <h4>{product.name}</h4>
-                  <p>${product.price} - Stock: {product.stock}</p>
-                </div>
-                <button
-                  onClick={() => addToCart(product)}
-                  disabled={product.stock === 0}
-                  className="btn-add"
-                >
-                  Add
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div className="order-section">
           <h2>Order Summary</h2>
 
-          {cart.length === 0 ? (
-            <p className="empty-cart">No items in cart</p>
+          {cartItems.length === 0 ? (
+            <p className="empty-cart">No items in cart. <Link to="/">Add products</Link></p>
           ) : (
             <div className="cart-items">
-              {cart.map((item) => {
-                const product = products.find(p => p._id === item.productId);
+              {cartItems.map((item) => {
+                const product = products.find(p => p._id === item.productId) || item.product;
                 return (
                   <div key={item.productId} className="cart-item">
                     {product?.photos?.[0] && (
@@ -192,20 +136,9 @@ function OrderForm() {
                       <h4>{product?.name || 'Product'}</h4>
                       <p>${product?.price || item.price} each</p>
                     </div>
-                    <input
-                      type="number"
-                      min="1"
-                      max={product?.stock || 999}
-                      value={item.quantity}
-                      onChange={(e) => updateQuantity(item.productId, e.target.value)}
-                      className="quantity-input"
-                    />
-                    <button
-                      onClick={() => removeFromCart(item.productId)}
-                      className="btn-remove"
-                    >
-                      Remove
-                    </button>
+                    <div className="item-quantity">
+                      <span>Qty: {item.quantity}</span>
+                    </div>
                   </div>
                 );
               })}
@@ -282,7 +215,7 @@ function OrderForm() {
               </select>
             </div>
 
-            <button type="submit" disabled={loading || cart.length === 0} className="btn-submit">
+            <button type="submit" disabled={loading || cartItems.length === 0} className="btn-submit">
               {loading ? 'Creating Order...' : 'Create Order'}
             </button>
           </form>

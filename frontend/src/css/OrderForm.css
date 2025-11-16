@@ -1,7 +1,32 @@
 .order-form-container {
-  max-width: 1400px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.info-text {
+  text-align: center;
+  color: #666;
+  margin: 20px 0;
+}
+
+.btn-browse-products {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: transform 0.2s;
+  margin: 20px auto;
+  display: block;
+  text-align: center;
+  width: fit-content;
+}
+
+.btn-browse-products:hover {
+  transform: translateY(-2px);
 }
 
 .order-form-container h1 {

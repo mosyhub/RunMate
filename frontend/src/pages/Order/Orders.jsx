@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../css/Orders.css';
+import { useAuth } from '../../context/AuthContext';
+import '../../css/Orders.css';
 
 const API_URL = 'http://localhost:5000/api/orders';
 

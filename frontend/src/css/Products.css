@@ -11,6 +11,12 @@
   margin-bottom: 30px;
 }
 
+.products-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .products-header h1 {
   margin: 0;
   color: #333;
@@ -167,6 +173,22 @@
 
 .btn-delete:hover {
   background: #c82333;
+}
+
+.btn-add-cart {
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-add-cart:hover {
+  background: #218838;
 }
 
 .pagination {

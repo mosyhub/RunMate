@@ -1,24 +1,28 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Profile from './pages/Profile';
-import Products from './pages/Products';
-import ProductForm from './pages/ProductForm';
-import ProductDetail from './pages/ProductDetail';
-import Orders from './pages/Orders';
-import OrderForm from './pages/OrderForm';
-import OrderDetail from './pages/OrderDetail';
-import AdminDashboard from './pages/AdminDashboard';
+import Login from './pages/User/Login';
+import Signup from './pages/User/Signup';
+import Profile from './pages/User/Profile';
+import Products from './pages/Product/Products';
+import ProductForm from './pages/Admin/ProductForm';
+import ProductDetail from './pages/Product/ProductDetail';
+import Orders from './pages/Order/Orders';
+import OrderForm from './pages/Order/OrderForm';
+import OrderDetail from './pages/Order/OrderDetail';
+import Home from './Home';
+import Cart from './pages/Cart/Cart';
+import AdminDashboard from './pages/Admin/AdminDashboard';
 import './App.css';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
+        <CartProvider>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route
@@ -61,8 +65,10 @@ function App() {
               <AdminDashboard />
             </AdminRoute>
           } />
-          <Route path="/" element={<Navigate to="/products" replace />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/cart" element={<Cart />} />
         </Routes>
+        </CartProvider>
       </AuthProvider>
     </Router>
   );

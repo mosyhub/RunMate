@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Sidebar from '../components/sidebar';
-import Topbar from '../components/Topbar';
-import '../css/AdminDashboard.css';
+import { useAuth } from '../../context/AuthContext';
+import Sidebar from '../../components/Sidebar';
+import Topbar from '../../components/Topbar';
+import '../../css/AdminDashboard.css';
 
 const API_URL = 'http://localhost:5000/api/admin';
 

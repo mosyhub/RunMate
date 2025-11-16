@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../css/ProductDetail.css';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import '../../css/ProductDetail.css';
 
 const API_URL = 'http://localhost:5000/api/products';
 
 function ProductDetail() {
   const { id } = useParams();
   const { currentUser } = useAuth();
+  const { addToCart, getCartItem } = useCart();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -35,24 +38,23 @@ function ProductDetail() {
     }
   };
 
-  const handleAddToOrder = () => {
-    if (!currentUser) {
-      navigate('/login');
+  useEffect(() => {
+    if (product) {
+      const cartItem = getCartItem(product._id);
+      if (cartItem) {
+        setQuantity(cartItem.quantity);
+      }
+    }
+  }, [product, getCartItem]);
+
+  const handleAddToCart = () => {
+    if (product.stock === 0) {
       return;
     }
 
-    // Store product in localStorage for order creation
-    const orderItem = {
-      productId: product._id,
-      quantity: parseInt(quantity),
-      price: product.price
-    };
-
-    const existingItems = JSON.parse(localStorage.getItem('cart') || '[]');
-    existingItems.push(orderItem);
-    localStorage.setItem('cart', JSON.stringify(existingItems));
-    
-    alert('Product added to cart!');
+    addToCart(product, parseInt(quantity));
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   if (loading) {
@@ -103,7 +105,7 @@ function ProductDetail() {
             </div>
           )}
 
-          {currentUser && currentUser.id !== product.createdBy?._id && (
+          {(!currentUser || (currentUser && currentUser.id !== product.createdBy?._id)) && (
             <div className="purchase-section">
               <div className="quantity-selector">
                 <label>Quantity:</label>
@@ -112,15 +114,15 @@ function ProductDetail() {
                   min="1"
                   max={product.stock}
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock, parseInt(e.target.value) || 1)))}
                 />
               </div>
               <button
-                onClick={handleAddToOrder}
+                onClick={handleAddToCart}
                 disabled={product.stock === 0}
                 className="btn-add-to-cart"
               >
-                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {addedToCart ? 'Added to Cart!' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </button>
             </div>
           )}
