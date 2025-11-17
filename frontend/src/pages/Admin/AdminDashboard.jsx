@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
-import Topbar from '../../components/Topbar';
 import SalesChart from './SalesChart';
-import '../../css/AdminDashboard.css';
 
 const API_URL = 'http://localhost:5000/api/admin';
 
@@ -68,119 +66,157 @@ function AdminDashboard() {
     return colors[status] || 'text-gray-600';
   };
 
-  if (loading) {
-    return (
-      <div className="admin-dashboard">
-        <div className="loading">Loading dashboard...</div>
+  const renderShell = (content) => (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar />
+      <div className="flex-1 pt-20 md:pt-0 flex items-center justify-center text-gray-500">
+        {content}
       </div>
-    );
+    </div>
+  );
+
+  if (loading) {
+    return renderShell('Loading dashboard...');
   }
 
   if (error) {
-    return (
-      <div className="admin-dashboard">
-        <div className="error-message">{error}</div>
-      </div>
-    );
+    return renderShell(error);
   }
 
   return (
-    <div className="admin-dashboard">
+    <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      <div className="dashboard-content">
-        <Topbar />
-        <div className="dashboard-main">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h3 className="stat-title">Total Users</h3>
-              <p className="stat-value">{stats?.totalUsers || 0}</p>
+      <div className="flex-1 pt-20 md:pt-0">
+        <header className="bg-gray-900 text-white py-16 px-4 sm:px-8 shadow-2xl">
+          <div className="max-w-7xl mx-auto flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-4">
+              <p className="text-sm uppercase tracking-[0.4em] text-orange-400/80">Admin • Dashboard</p>
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight">
+                Keep the <span className="text-orange-400">RunMate</span> engine running.
+              </h1>
+              <p className="text-lg text-gray-300 max-w-3xl">
+                Pulled straight from the home page aesthetic—bold, confident, and ready for a sprint through your latest stats.
+              </p>
             </div>
-
-            <div className="stat-card">
-              <h3 className="stat-title">Total Orders</h3>
-              <p className="stat-value">{stats?.totalOrders || 0}</p>
-            </div>
-
-            <div className="stat-card">
-              <h3 className="stat-title">Total Products</h3>
-              <p className="stat-value">{stats?.totalProducts || 0}</p>
-            </div>
-
-            <div className="stat-card">
-              <h3 className="stat-title">Total Revenue</h3>
-              <p className="stat-value">${(stats?.totalRevenue || 0).toFixed(2)}</p>
-            </div>
+            <button
+              onClick={logout}
+              className="inline-flex items-center justify-center rounded-2xl border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
+            >
+              Logout
+            </button>
           </div>
+        </header>
 
-          <div className="dashboard-section">
-            <h2 className="section-title">Recent Orders</h2>
-            {recentOrders.length === 0 ? (
-              <p className="no-data">No orders found</p>
-            ) : (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order._id}>
-                      <td>#{order._id.slice(-8)}</td>
-                      <td>{order.user?.name || order.user?.email || 'N/A'}</td>
-                      <td>${order.totalAmount.toFixed(2)}</td>
-                      <td className={getStatusColor(order.status)}>
-                        {order.status}
-                      </td>
-                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl bg-white shadow-lg border border-gray-100 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total Users</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+            </div>
+            <div className="rounded-2xl bg-white shadow-lg border border-gray-100 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total Orders</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{stats?.totalOrders || 0}</p>
+            </div>
+            <div className="rounded-2xl bg-white shadow-lg border border-gray-100 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total Products</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{stats?.totalProducts || 0}</p>
+            </div>
+            <div className="rounded-2xl bg-white shadow-lg border border-gray-100 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total Revenue</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">${(stats?.totalRevenue || 0).toFixed(2)}</p>
+            </div>
+          </section>
 
-          <div className="dashboard-section">
-            <h2 className="section-title">Recent Users</h2>
-            {recentUsers.length === 0 ? (
-              <p className="no-data">No users found</p>
-            ) : (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Joined</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentUsers.map((user) => (
-                    <tr key={user._id}>
-                      <td>{user.name || 'N/A'}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <span className={user.isAdmin ? 'badge-admin' : 'badge-user'}>
-                          {user.isAdmin ? 'Admin' : 'User'}
-                        </span>
-                      </td>
-                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      </div>
+          <section className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-3xl bg-white border border-gray-100 shadow-xl p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
+                <p className="text-sm text-gray-500">{recentOrders.length} latest</p>
+              </div>
+              {recentOrders.length === 0 ? (
+                <p className="text-center py-10 text-gray-500 text-sm">No orders found.</p>
+              ) : (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-100 text-sm">
+                    <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-widest text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Order</th>
+                        <th className="px-4 py-3 text-left">Customer</th>
+                        <th className="px-4 py-3 text-left">Total</th>
+                        <th className="px-4 py-3 text-left">Status</th>
+                        <th className="px-4 py-3 text-left">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-gray-700">
+                      {recentOrders.map((order) => (
+                        <tr key={order._id}>
+                          <td className="px-4 py-4 font-semibold text-gray-900">#{order._id.slice(-8)}</td>
+                          <td className="px-4 py-4">{order.user?.name || order.user?.email || 'N/A'}</td>
+                          <td className="px-4 py-4">${order.totalAmount.toFixed(2)}</td>
+                          <td className={`px-4 py-4 capitalize font-semibold ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </td>
+                          <td className="px-4 py-4">{new Date(order.createdAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
 
-      {/* Sales Chart Section */}
-      <div className="dashboard-section">
-        <SalesChart />
+            <div className="rounded-3xl bg-white border border-gray-100 shadow-xl p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">New Users</h2>
+                <p className="text-sm text-gray-500">{recentUsers.length} joined</p>
+              </div>
+              {recentUsers.length === 0 ? (
+                <p className="text-center py-10 text-gray-500 text-sm">No users found.</p>
+              ) : (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-100 text-sm">
+                    <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-widest text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Name</th>
+                        <th className="px-4 py-3 text-left">Email</th>
+                        <th className="px-4 py-3 text-left">Role</th>
+                        <th className="px-4 py-3 text-left">Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-gray-700">
+                      {recentUsers.map((user) => (
+                        <tr key={user._id}>
+                          <td className="px-4 py-4 font-semibold text-gray-900">{user.name || 'N/A'}</td>
+                          <td className="px-4 py-4">{user.email}</td>
+                          <td className="px-4 py-4">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                                user.isAdmin ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'
+                              }`}
+                            >
+                              {user.isAdmin ? 'Admin' : 'User'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-3xl bg-white border border-gray-100 shadow-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Sales Performance</h2>
+              <p className="text-sm text-gray-500">Last 12 months</p>
+            </div>
+            <SalesChart />
+          </section>
+        </main>
       </div>
     </div>
   );
